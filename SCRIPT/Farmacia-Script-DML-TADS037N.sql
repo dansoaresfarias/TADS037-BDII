@@ -1,6 +1,6 @@
 -- SQL DML: INSERT
 insert into cliente (cpf, nome, sexo, email, telefone, dataNasc)
-	value ("999.888.777-00", "Kellvyn Oliveira", 'M', 
+	values ("999.888.777-00", "Kellvyn Oliveira", 'M', 
 			"kellvyn.oliveira@gmail.com", "(81)999887766", '1993-11-21');
             
 insert into cliente (cpf, nome, sexo, email, telefone, dataNasc)
@@ -172,3 +172,10 @@ delete from cliente
 	where pontuacao < 100;
 
 delete from cliente;
+
+start transaction;
+	delete from cliente
+		where cpf in (select Cliente_cpf from enderecocli
+		where cidade = "Olinda");
+commit;
+rollback;
