@@ -58,7 +58,7 @@ insert into enderecocli (cliente_cpf, uf, cidade, bairro, rua, numero,
 
 insert into enderecocli (cliente_cpf, uf, cidade, bairro, rua, numero, 
 	comp, cep)
-	value ("999.888.777-01", "PE", "Recife", "Varzea", 
+	values ("999.888.777-01", "PE", "Recife", "Varzea", 
 		"Rua Direita", 14, null, "50070-000"),
 			("999.888.777-02", "PE", "Olinda", "Bairro Novo", 
 		"Rua Senador Costa", 1112, "Ap 1701", "50110-880"),
@@ -155,8 +155,20 @@ select now();
 
 update cliente
 	set idade = timestampdiff(year, dataNasc, now());
+
+-- SQL DML: DELETE
+delete from cliente
+	where cpf = "999.888.777-02";
     
-    
-    
-    
-    
+select Cliente_cpf from enderecocli
+	where cidade = "Olinda";
+
+
+delete from cliente
+	where cpf in (select Cliente_cpf from enderecocli
+	where cidade = "Olinda");
+
+delete from cliente
+	where pontuacao < 100;
+
+delete from cliente;
