@@ -367,14 +367,71 @@ select replace(replace(func.cpf, '.', ''), '-', '') "CPF",
 		left join telefone tel on tel.Funcionario_cpf = func.cpf
 		order by func.nome;
 
+-- cpf, funcionario, salario(SB), comissao, aux alimentacao(550), 
+-- aux saude(idade), aux escola(180*filho<=6), INSS, IRRF, salario liquido
+select replace(replace(func.cpf, '.', ''), '-', '') "CPF", 
+	upper(func.nome) "Funcionário",
+    coalesce(tel.numero, "Não informado") "Telefone", 
+	format(func.salario, 2, 'de_DE') "Salário Bruto", 
+    format(func.comissao, 2, 'de_DE') "Comissão",
+    format(550, 2, 'de_DE') "Auxílio Alimentação", 
+	case when timestampdiff(year, func.dataNasc, now()) <= 25 then 250
+		when timestampdiff(year, func.dataNasc, now()) >= 26 and 
+			timestampdiff(year, func.dataNasc, now()) <= 35 then 350
+            else 0
+		end "Aux Saude"
+	from funcionario func
+		left join telefone tel on tel.Funcionario_cpf = func.cpf
+		order by func.nome;
 
 
+-- cpf, funcionario, salario(SB), comissao, aux alimentacao(550), 
+-- aux saude(idade), aux escola(180*filho<=6), INSS, IRRF, salario liquido
+select replace(replace(func.cpf, '.', ''), '-', '') "CPF", 
+	upper(func.nome) "Funcionário",
+    coalesce(tel.numero, "Não informado") "Telefone", 
+	format(func.salario, 2, 'de_DE') "Salário Bruto", 
+    format(func.comissao, 2, 'de_DE') "Comissão",
+    format(550, 2, 'de_DE') "Auxílio Alimentação", 
+	calcAuxSaude(func.dataNasc) "Aux Saude"
+	from funcionario func
+		left join telefone tel on tel.Funcionario_cpf = func.cpf
+		order by func.nome;
 
+delimiter $$
+create function calcAuxSaude(dn date)
+returns decimal(5,2) deterministic
+	begin
+		declare auxSaude decimal(5,2) default 0.0;
+        declare idade int;
+        select timestampdiff(year, dn, now()) into idade;
+        if idade <= 25 
+			then set auxSaude = 250;
+		elseif idade >= 26 and idade <= 35
+			then set auxSaude = 350;
+		elseif idade >= 36 and idade <= 45
+			then set auxSaude = 450;
+		elseif idade >= 46 and idade <= 55
+			then set auxSaude = 550;
+		else set auxSaude = 650;
+        end if;
+        return auxSaude;
+    end $$
+delimiter ;
 
-
-
-
-
+-- cpf, funcionario, salario(SB), comissao, aux alimentacao(550), 
+-- aux saude(idade), aux escola(180*filho<=6), INSS, IRRF, salario liquido
+select replace(replace(func.cpf, '.', ''), '-', '') "CPF", 
+	upper(func.nome) "Funcionário",
+    coalesce(tel.numero, "Não informado") "Telefone", 
+	format(func.salario, 2, 'de_DE') "Salário Bruto", 
+    format(func.comissao, 2, 'de_DE') "Comissão",
+    format(550, 2, 'de_DE') "Auxílio Alimentação", 
+	format(calcAuxSaude(func.dataNasc), 2, 'de_DE') "Aux Saude",
+    timestampdiff(year, func.dataNasc, now()) "Idade"
+	from funcionario func
+		left join telefone tel on tel.Funcionario_cpf = func.cpf
+		order by func.nome;
 
 
 
