@@ -433,6 +433,111 @@ select replace(replace(func.cpf, '.', ''), '-', '') "CPF",
 		left join telefone tel on tel.Funcionario_cpf = func.cpf
 		order by func.nome;
 
+delimiter $$
+create function auxEscola(cpfResp varchar(14))
+returns decimal(6,2) deterministic
+	begin
+		declare qtdFilhos int default 0;
+        select count(cpf) into qtdFilhos
+			from dependente
+				where Funcionario_cpf = cpfResp and
+					parentesco like "Filh%" and
+					timestampdiff(year, dataNasc, now()) <= 6
+						group by Funcionario_cpf;
+		return 180 * qtdFilhos;
+    end $$
+delimiter ;
 
 
+select count(cpf) 
+	from dependente
+		where Funcionario_cpf = "123.456.789-03" and
+			parentesco like "Filh%" and
+			timestampdiff(year, dataNasc, now()) <= 6
+				group by Funcionario_cpf;
 
+-- cpf, funcionario, salario(SB), comissao, aux alimentacao(550), 
+-- aux saude(idade), aux escola(180*filho<=6), INSS, IRRF, salario liquido
+select replace(replace(func.cpf, '.', ''), '-', '') "CPF", 
+	upper(func.nome) "Funcionário",
+    coalesce(tel.numero, "Não informado") "Telefone", 
+	format(func.salario, 2, 'de_DE') "Salário Bruto", 
+    format(func.comissao, 2, 'de_DE') "Comissão",
+    format(550, 2, 'de_DE') "Auxílio Alimentação", 
+	format(calcAuxSaude(func.dataNasc), 2, 'de_DE') "Aux Saúde",
+    format(auxEscola(func.cpf), 2, 'de_DE') "Aux Escola"
+	from funcionario func
+		left join telefone tel on tel.Funcionario_cpf = func.cpf
+		order by func.nome;
+
+delimiter $$
+create function calcINSS(sb decimal(7,2))
+returns decimal(6,2) deterministic
+	begin
+		declare inss decimal(6,2) default 0.0;
+        if(sb <= 1412.00) 
+			then set inss = sb * 0.075;
+		elseif(sb <= 2666.68)
+			then set inss = sb * 0.09;
+		elseif(sb <= 4000.03)
+			then set inss = sb * 0.12;
+		elseif(sb <= 7786.02)
+			then set inss = sb * 0.14;
+		else set inss = 7786.02 * 0.14;
+        end if;
+        return inss;
+    end $$
+delimiter ;
+
+-- cpf, funcionario, salario(SB), comissao, aux alimentacao(550), 
+-- aux saude(idade), aux escola(180*filho<=6), INSS, IRRF, salario liquido
+select replace(replace(func.cpf, '.', ''), '-', '') "CPF", 
+	upper(func.nome) "Funcionário",
+    coalesce(tel.numero, "Não informado") "Telefone", 
+	format(func.salario, 2, 'de_DE') "Salário Bruto", 
+    format(func.comissao, 2, 'de_DE') "Comissão",
+    format(550, 2, 'de_DE') "Auxílio Alimentação", 
+	format(calcAuxSaude(func.dataNasc), 2, 'de_DE') "Aux Saúde",
+    format(auxEscola(func.cpf), 2, 'de_DE') "Aux Escola",
+    concat("- ", format(calcINSS(func.salario), 2, 'de_DE')) "INSS"
+	from funcionario func
+		left join telefone tel on tel.Funcionario_cpf = func.cpf
+		order by func.nome;
+
+delimiter $$
+create function calcIRRF(sb decimal(7,2))
+returns decimal(6,2) deterministic
+	begin
+		declare irrf decimal(6,2);
+        if(sb <= 2259.21) 
+			then set irrf = 0.0;
+		elseif(sb <= 2826.65)
+			then set irrf = sb * 0.075;
+		elseif(sb <= 3751.05)
+			then set irrf = sb * 0.15;
+		elseif(sb <= 4664.68)
+			then set irrf = sb * 0.225;
+		else set irrf = sb * 0.275;
+        end if;
+        return irrf;
+    end $$
+delimiter ;
+
+-- cpf, funcionario, salario(SB), comissao, aux alimentacao(550), 
+-- aux saude(idade), aux escola(180*filho<=6), INSS, IRRF, salario liquido
+select replace(replace(func.cpf, '.', ''), '-', '') "CPF", 
+	upper(func.nome) "Funcionário",
+    coalesce(tel.numero, "Não informado") "Telefone", 
+	format(func.salario, 2, 'de_DE') "Salário Bruto", 
+    format(func.comissao, 2, 'de_DE') "Comissão",
+    format(550, 2, 'de_DE') "Auxílio Alimentação", 
+	format(calcAuxSaude(func.dataNasc), 2, 'de_DE') "Aux Saúde",
+    format(auxEscola(func.cpf), 2, 'de_DE') "Aux Escola",
+    concat("- ", format(calcINSS(func.salario), 2, 'de_DE')) "INSS",
+    concat("- ", format(calcIRRF(func.salario), 2, 'de_DE')) "IRRF",
+    format( func.salario + func.comissao + 550 + 
+    calcAuxSaude(func.dataNasc) + auxEscola(func.cpf) - calcINSS(func.salario) - 
+    calcIRRF(func.salario) , 2, 'de_DE')  "Salário Líquido"
+	from funcionario func
+		left join telefone tel on tel.Funcionario_cpf = func.cpf
+		order by func.nome;
