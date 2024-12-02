@@ -541,3 +541,60 @@ select replace(replace(func.cpf, '.', ''), '-', '') "CPF",
 	from funcionario func
 		left join telefone tel on tel.Funcionario_cpf = func.cpf
 		order by func.nome;
+        
+delimiter $$
+create procedure cadFuncionario(in pcpf varchar(14),
+								in pnome varchar(60), 
+								in pnomeSocial varchar(45),
+								in pemail varchar(45), 
+								in psexo char(1), 
+								in pestadoCivil varchar(15), 
+								in pdataNasc date, 
+								in pch int, 
+								in psalario decimal(7,2),
+								in pcomissao decimal(6,2), 
+								in pdataAdm datetime,
+								in puf char(2), 
+								in pcidade varchar(60), 
+								in pbairro varchar(60), 
+								in prua varchar(70), 
+								in pnumero int, 
+								in pcomp varchar(45), 
+								in pcep varchar(9),
+								in pNumTel1 varchar(15),
+								in pNumTel2 varchar(15),
+								in pNumTel3 varchar(15))
+	begin
+		insert into funcionario (cpf, nome, nomeSocial, email, sexo, estadoCivil,
+			dataNasc, cd, salario, comissao, dataAdm)
+            value (pcpf, pnome, pnomeSocial, pemail, psexo, pestadoCivil,
+					pdataNasc, pcd, psalario, pcomissao, pdataAdm);
+		insert into enderecofunc 
+			value (pcpf, puf, pcidade, pbairro, prua, pnumero, pcomp, pcep);
+		insert into telefone (numero, funcionario_cpf)
+			value (pNumTel1, pcpf);
+		if (pNumTel2 is not null) then
+			insert into telefone (numero, funcionario_cpf)
+				value (pNumTel2, pcpf);
+		end if;
+		if (pNumTel3 is not null) then
+			insert into telefone (numero, funcionario_cpf)
+				value (pNumTel3, pcpf);
+		end if;
+    end $$
+delimiter ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
