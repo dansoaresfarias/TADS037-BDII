@@ -566,9 +566,9 @@ create procedure cadFuncionario(in pcpf varchar(14),
 								in pNumTel3 varchar(15))
 	begin
 		insert into funcionario (cpf, nome, nomeSocial, email, sexo, estadoCivil,
-			dataNasc, cd, salario, comissao, dataAdm)
+			dataNasc, ch, salario, comissao, dataAdm)
             value (pcpf, pnome, pnomeSocial, pemail, psexo, pestadoCivil,
-					pdataNasc, pcd, psalario, pcomissao, pdataAdm);
+					pdataNasc, pch, psalario, pcomissao, pdataAdm);
 		insert into enderecofunc 
 			value (pcpf, puf, pcidade, pbairro, prua, pnumero, pcomp, pcep);
 		insert into telefone (numero, funcionario_cpf)
@@ -584,17 +584,7 @@ create procedure cadFuncionario(in pcpf varchar(14),
     end $$
 delimiter ;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+call cadFuncionario("018.981.587-00", "Linda Santos", null, "linda.santos@bol.com",
+	'F', "Casada", '1994-09-03', 30, 2800, 500, '2024-11-04 08:00', "PE", "Recife",
+	"Várzea", "Rua Polidoro", 125, "Ap 404", "50480-080", "(81)986546895",
+	"(81)987542136", null);
